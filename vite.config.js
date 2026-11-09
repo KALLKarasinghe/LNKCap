@@ -2,8 +2,9 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
   server: {
-    host: true, // Allow accessing from mobile device on local Wi-Fi
-    port: 5173
+    host: '0.0.0.0',
+    port: 5173,
+    allowedHosts: true
   },
   build: {
     outDir: 'dist',
