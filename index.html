@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#0c0c14" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <title>LNKcap Mobile</title>
+    <link rel="stylesheet" href="/fonts.css" />
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <!-- Mobile App Header -->
+    <header>
+      <div class="brand">
+        <span class="logo">L</span>
+        <strong>LNK<span>cap</span></strong>
+        <small>MOBILE</small>
+      </div>
+      <div class="header-actions">
+        <button id="settingsBtn" class="icon-btn" title="Gemini Settings">⚙</button>
+      </div>
+    </header>
+
+    <!-- Main Viewport -->
+    <main>
+      <!-- Top Video Preview Section -->
+      <section id="previewSection">
+        <div id="emptyState">
+          <div class="empty-icon">▻</div>
+          <h2>No video selected</h2>
+          <p>Import a short video or reel from your phone to start generating Sinhala captions.</p>
+          <button id="chooseVideoBtn" class="btn primary" style="margin-top: 6px;">＋ Choose Video</button>
+        </div>
+
+        <div id="videoWrap" hidden>
+          <video id="video" playsinline webkit-playsinline></video>
+          <div id="captionOverlay"></div>
+          <div class="transport">
+            <button id="backBtn" title="Back 5s">↶ 5s</button>
+            <button id="playBtn" class="play-btn" title="Play / Pause">▶</button>
+            <button id="fwdBtn" title="Forward 5s">5s ↷</button>
+            <span id="timeDisplay">00:00 / 00:00</span>
+            <input type="range" id="seekBar" min="0" max="1000" value="0" />
+          </div>
+        </div>
+      </section>
+
+      <!-- Bottom Panel Section (Changes based on bottom nav tab) -->
+      <section id="panelSection">
+        <!-- 1. Video Panel -->
+        <div id="videoPanel" class="tab-content">
+          <div class="card">
+            <h3>Video Settings</h3>
+            <p class="subtext" id="videoDetailsText">Select a video to edit captions and export.</p>
+            <button id="repickVideoBtn" class="btn wide">＋ Change Video</button>
+          </div>
+
+          <div class="card">
+            <h3>Aspect Ratio / Frame</h3>
+            <p class="subtext">Optimized for social platforms.</p>
+            <label>Aspect Ratio</label>
+            <select id="aspectRatioSelect">
+              <option value="9:16">9:16 · Vertical Reels, TikTok & Shorts</option>
+              <option value="1:1">1:1 · Square Post</option>
+              <option value="16:9">16:9 · Horizontal Landscape (YouTube)</option>
+              <option value="original">Original Aspect Ratio</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 2. Captions Panel -->
+        <div id="captionsPanel" class="tab-content" hidden>
+          <div class="card">
+            <h3>Auto Captioning (AI)</h3>
+            <p class="subtext">Transcribe spoken words using Google Gemini Flash.</p>
+            <label>Spoken Language</label>
+            <select id="languageSelect">
+              <option value="si" selected>සිංහල · Sinhala</option>
+              <option value="auto">Detect Spoken Language</option>
+              <option value="en">English</option>
+            </select>
+            <button id="generateBtn" class="btn primary wide" style="margin-top: 10px;">✦ Generate Captions</button>
+          </div>
+
+          <div class="captions-toolbar">
+            <span id="captionCountLabel" style="font-size: 11px; color: var(--muted);">0 clips</span>
+            <div>
+              <button id="undoBtn" class="btn" style="padding: 4px 8px; font-size: 11px;">↶ Undo</button>
+              <button id="addCaptionBtn" class="btn" style="padding: 4px 8px; font-size: 11px;">＋ Add</button>
+            </div>
+          </div>
+
+          <div id="captionList">
+            <p class="subtext" style="text-align: center; margin: 24px 0;">Generate captions or add lines manually.</p>
+          </div>
+        </div>
+
+        <!-- 3. Style Panel (SinCap Presets) -->
+        <div id="stylePanel" class="tab-content" hidden>
+          <div id="styleDemo">
+            <span id="styleDemoText">ඔබේ කතාව ලස්සනට කියන්න</span>
+          </div>
+
+          <button id="applyAllStyleBtn" class="btn primary wide">✓ Apply to all captions</button>
+
+          <!-- SinCap Category Filters -->
+          <div class="style-filters">
+            <button type="button" class="selected" data-filter="all">All 40</button>
+            <button type="button" data-filter="popular">Popular</button>
+            <button type="button" data-filter="highlight">Highlight</button>
+            <button type="button" data-filter="social">Social</button>
+            <button type="button" data-filter="effects">Effects (Pro)</button>
+            <button type="button" data-filter="motion">✦ Motion</button>
+          </div>
+
+          <div id="presetGrid" class="preset-grid"></div>
+
+          <div class="card" style="margin-top: 16px;">
+            <h3>Customize Style</h3>
+            <label>Font Size: <span id="sizeValue">52</span>px</label>
+            <input type="range" id="fontSizeRange" min="24" max="100" value="52" style="width: 100%;" />
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px;">
+              <div>
+                <label>Text Color</label>
+                <input type="color" id="textColorInput" value="#ffffff" style="width: 100%; height: 34px; background: none; border: 1px solid var(--line); border-radius: 6px;" />
+              </div>
+              <div>
+                <label>Highlight Color</label>
+                <input type="color" id="accentColorInput" value="#ffd700" style="width: 100%; height: 34px; background: none; border: 1px solid var(--line); border-radius: 6px;" />
+              </div>
+            </div>
+
+            <label>Outline Stroke: <span id="outlineValue">2</span>px</label>
+            <input type="range" id="outlineRange" min="0" max="8" step="0.5" value="2" style="width: 100%;" />
+
+            <label>Shadow Blur: <span id="shadowValue">1</span>px</label>
+            <input type="range" id="shadowRange" min="0" max="8" step="0.5" value="1" style="width: 100%;" />
+
+            <label>Placement</label>
+            <select id="positionSelect">
+              <option value="bottom" selected>Bottom</option>
+              <option value="middle">Center / Middle</option>
+              <option value="top">Top</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 4. Fonts Panel -->
+        <div id="fontsPanel" class="tab-content" hidden>
+          <div class="card" style="margin-bottom: 12px; background: #231b34; border-color: #4c376e;">
+            <strong style="font-size: 12px; color: #d6beff;">✦ 19 Sinhala Fonts Included (Offline)</strong>
+            <p class="subtext" style="margin-top: 4px; margin-bottom: 0;">Tap any font card to apply it instantly to all captions.</p>
+          </div>
+          <div id="fontGrid" class="font-grid"></div>
+        </div>
+
+        <!-- 5. Export Panel -->
+        <div id="exportPanel" class="tab-content" hidden>
+          <div class="card">
+            <h3>Subtitle Files (.srt)</h3>
+            <p class="subtext">Export SRT for video players and editing software.</p>
+            <button id="exportUnicodeSrtBtn" class="btn wide">↑ Export Unicode (.srt)</button>
+            <p class="subtext" style="font-size: 10px; margin-top: 2px;">For CapCut, YouTube, Facebook, TikTok, VLC.</p>
+
+            <button id="exportFmSrtBtn" class="btn wide" style="margin-top: 10px;">↑ Export FM Font (.srt)</button>
+            <p class="subtext" style="font-size: 10px; margin-top: 2px;">Converts Sinhala to FM Wijesekara for Adobe Premiere Pro & After Effects without letter-break bugs.</p>
+
+            <button id="importSrtBtn" class="btn wide" style="margin-top: 10px;">↓ Import Subtitles (.srt)</button>
+          </div>
+
+          <div class="card">
+            <h3>Burned-In Video Export</h3>
+            <p class="subtext">Render a video file with the styled Sinhala subtitles burned in.</p>
+            <button id="exportVideoBtn" class="btn primary wide">🎬 Export Captioned Video</button>
+          </div>
+
+          <div class="card">
+            <h3>Project File</h3>
+            <button id="saveProjectBtn" class="btn wide">💾 Save Project (.lnkcap)</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="bottom-nav">
+      <button class="nav-item active" data-tab="video">
+        <span class="nav-icon">🎬</span>
+        <span>Video</span>
+      </button>
+      <button class="nav-item" data-tab="captions">
+        <span class="nav-icon">📝</span>
+        <span>Captions</span>
+      </button>
+      <button class="nav-item" data-tab="style">
+        <span class="nav-icon">🎨</span>
+        <span>Style</span>
+      </button>
+      <button class="nav-item" data-tab="fonts">
+        <span class="nav-icon">🔤</span>
+        <span>Fonts</span>
+      </button>
+      <button class="nav-item" data-tab="export">
+        <span class="nav-icon">🚀</span>
+        <span>Export</span>
+      </button>
+    </nav>
+
+    <!-- Settings Dialog -->
+    <dialog id="settingsDialog">
+      <div class="dialog-head">
+        <h2>Gemini AI Settings</h2>
+        <button id="closeSettingsBtn" class="icon-btn" style="border: none;">✕</button>
+      </div>
+      <p class="subtext">Enter your Google AI Studio API key to transcribe speech.</p>
+      <label>Google Gemini API Key</label>
+      <input type="password" id="apiKeyInput" placeholder="Paste your API key (AIza...)" />
+
+      <label>Flash Model</label>
+      <select id="modelSelect">
+        <option value="gemini-2.5-flash">gemini-2.5-flash (Recommended)</option>
+        <option value="gemini-2.0-flash">gemini-2.0-flash</option>
+      </select>
+
+      <div id="settingsMessage" style="font-size: 11px; margin-top: 10px; color: #a48ecc;"></div>
+
+      <div class="dialog-actions">
+        <button id="clearKeyBtn" class="btn" type="button">Remove Key</button>
+        <button id="saveSettingsBtn" class="btn primary" type="button">Save</button>
+      </div>
+    </dialog>
+
+    <!-- Busy Progress Dialog -->
+    <dialog id="busyDialog">
+      <div class="busy-orb">✦</div>
+      <h3 id="busyTitle">Processing</h3>
+      <p id="busyMessage" class="subtext">Please wait...</p>
+      <progress id="busyProgress" max="100" value="0"></progress>
+      <button id="cancelBusyBtn" class="btn" style="margin-top: 8px;">Cancel</button>
+    </dialog>
+
+    <!-- Floating Toast Notification -->
+    <div id="toast" role="status"></div>
+
+    <!-- Hidden Native Inputs -->
+    <input type="file" id="videoFileInput" accept="video/*" hidden />
+    <input type="file" id="srtFileInput" accept=".srt" hidden />
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

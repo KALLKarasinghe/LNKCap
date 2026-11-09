@@ -1,0 +1,26 @@
+{
+  "name": "lnkcap-mobile",
+  "version": "1.0.0",
+  "description": "LNKcap Mobile - Sinhala AI Caption Studio powered by Gemini Flash",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host",
+    "build": "vite build",
+    "preview": "vite preview",
+    "cap:sync": "cap sync",
+    "cap:android": "cap run android",
+    "cap:ios": "cap run ios"
+  },
+  "dependencies": {
+    "@capacitor/android": "^7.0.1",
+    "@capacitor/cli": "^7.0.1",
+    "@capacitor/core": "^7.0.1",
+    "@capacitor/filesystem": "^7.0.0",
+    "@capacitor/share": "^7.0.0",
+    "@capacitor/status-bar": "^7.0.0"
+  },
+  "devDependencies": {
+    "vite": "^6.2.0"
+  }
+}
