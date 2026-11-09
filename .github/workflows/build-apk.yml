@@ -3,7 +3,10 @@ name: Build Android APK
 on:
   push:
     branches: [ "master", "main" ]
-  workflow_dispatch: # Allows manual trigger from GitHub Actions tab
+  workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -46,9 +49,24 @@ jobs:
           cd android
           ./gradlew assembleDebug --no-daemon --stacktrace
 
+      - name: Rename APK for Easy Download
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk LNKcap-Mobile.apk
+
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: LNKcap-Mobile-APK
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          path: LNKcap-Mobile.apk
           retention-days: 30
+
+      - name: Publish Release with APK
+        uses: softprops/action-gh-release@v2
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+        with:
+          tag_name: v1.0.0
+          name: "LNKcap Mobile v1.0.0 (Android APK)"
+          body: "Official Android APK release for LNKcap Mobile - Sinhala AI Caption Studio."
+          files: LNKcap-Mobile.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
