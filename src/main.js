@@ -644,26 +644,26 @@ let deferredInstallPrompt = null;
 window.addEventListener('beforeinstallprompt', e => {
   e.preventDefault();
   deferredInstallPrompt = e;
-  const btn = $('installAppBtn');
-  if (btn) btn.style.display = 'inline-flex';
 });
 
 const installBtn = $('installAppBtn');
 if (installBtn) {
   installBtn.onclick = async () => {
-    if (!deferredInstallPrompt) {
-      toast('To install, tap browser menu (⋮) -> "Install App" / "Add to Home Screen".');
-      return;
+    if (deferredInstallPrompt) {
+      deferredInstallPrompt.prompt();
+      const { outcome } = await deferredInstallPrompt.userChoice;
+      if (outcome === 'accepted') {
+        toast('LNKcap installed to your device!');
+      }
+      deferredInstallPrompt = null;
+    } else {
+      $('installDialog')?.showModal();
     }
-    deferredInstallPrompt.prompt();
-    const { outcome } = await deferredInstallPrompt.userChoice;
-    if (outcome === 'accepted') {
-      toast('LNKcap installed to your device!');
-      installBtn.style.display = 'none';
-    }
-    deferredInstallPrompt = null;
   };
 }
+
+$('closeInstallDialog').onclick = () => $('installDialog')?.close();
+$('gotItInstallBtn').onclick = () => $('installDialog')?.close();
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {

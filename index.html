@@ -22,7 +22,7 @@
         <small>MOBILE</small>
       </div>
       <div class="header-actions">
-        <button id="installAppBtn" class="btn primary" style="padding: 5px 10px; font-size: 11px; display: none;">📲 Install App</button>
+        <button id="installAppBtn" class="btn primary" style="padding: 5px 10px; font-size: 11px;">📲 Install App</button>
         <button id="settingsBtn" class="icon-btn" title="Gemini Settings">⚙</button>
       </div>
     </header>
@@ -244,6 +244,27 @@
       <p id="busyMessage" class="subtext">Please wait...</p>
       <progress id="busyProgress" max="100" value="0"></progress>
       <button id="cancelBusyBtn" class="btn" style="margin-top: 8px;">Cancel</button>
+    </dialog>
+
+    <!-- Install Guide Dialog -->
+    <dialog id="installDialog">
+      <div class="dialog-head">
+        <h2>Install LNKcap on Phone</h2>
+        <button id="closeInstallDialog" class="icon-btn" style="border: none;">✕</button>
+      </div>
+      <div style="text-align: center; padding: 10px 0;">
+        <div style="font-size: 38px; margin-bottom: 10px;">📲</div>
+        <p style="font-size: 13px; line-height: 1.6; color: #e2dbf5;">
+          Phone එකේ ඉහළ දකුණු කෙළවරේ ඇති <strong>තිත් 3 (⋮)</strong> Click කරන්න.<br />
+          ඉන්පසු <strong>"Add to Home screen"</strong> හෝ <strong>"Install app"</strong> තෝරන්න.
+        </p>
+        <p class="subtext" style="margin-top: 10px; font-size: 11px;">
+          එවිට Home screen එකට සහ App list එකට LNKcap App එක standalone ලෙස Install වේ!
+        </p>
+      </div>
+      <div class="dialog-actions">
+        <button id="gotItInstallBtn" class="btn primary" type="button" style="width: 100%;">හරි, තේරුණා</button>
+      </div>
     </dialog>
 
     <!-- Floating Toast Notification -->
