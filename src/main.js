@@ -639,6 +639,40 @@ $('clearKeyBtn').onclick = () => {
   toast('API key removed.');
 };
 
+// PWA Service Worker & Install Prompt Handling
+let deferredInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  const btn = $('installAppBtn');
+  if (btn) btn.style.display = 'inline-flex';
+});
+
+const installBtn = $('installAppBtn');
+if (installBtn) {
+  installBtn.onclick = async () => {
+    if (!deferredInstallPrompt) {
+      toast('To install, tap browser menu (⋮) -> "Install App" / "Add to Home Screen".');
+      return;
+    }
+    deferredInstallPrompt.prompt();
+    const { outcome } = await deferredInstallPrompt.userChoice;
+    if (outcome === 'accepted') {
+      toast('LNKcap installed to your device!');
+      installBtn.style.display = 'none';
+    }
+    deferredInstallPrompt = null;
+  };
+}
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(err => {
+      console.warn('ServiceWorker registration error:', err);
+    });
+  });
+}
+
 // Initialize App
 initPresets();
 initFonts();
