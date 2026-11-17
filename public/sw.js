@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lnkcap-mobile-v1';
+const CACHE_NAME = 'lnkcap-mobile-v2';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',

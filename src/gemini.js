@@ -4,7 +4,8 @@ import { normalize } from './captions.js';
 
 const KEY_STORAGE = 'lnkcap_gemini_api_key';
 const MODEL_STORAGE = 'lnkcap_gemini_model';
-const DEFAULT_MODEL = 'gemini-2.5-flash';
+const DEFAULT_MODEL = 'gemini-3.8-flash';
+export const FALLBACK_MODELS = ['gemini-3.8-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
 
 export function getStoredKey() {
   return localStorage.getItem(KEY_STORAGE) || '';
@@ -16,7 +17,12 @@ export function saveStoredKey(key) {
 }
 
 export function getStoredModel() {
-  return localStorage.getItem(MODEL_STORAGE) || DEFAULT_MODEL;
+  const m = localStorage.getItem(MODEL_STORAGE);
+  // Auto-migrate away from deprecated models
+  if (!m || m === 'gemini-2.5-flash') {
+    return DEFAULT_MODEL;
+  }
+  return m;
 }
 
 export function saveStoredModel(model) {
@@ -34,7 +40,28 @@ export async function checkModels(apiKey) {
   const flashModels = (data.models || [])
     .filter(m => m.name.includes('flash') && m.supportedGenerationMethods?.includes('generateContent'))
     .map(m => m.name.replace(/^models\//, ''));
-  return flashModels.length ? flashModels : [DEFAULT_MODEL, 'gemini-2.0-flash'];
+  return flashModels.length ? flashModels : FALLBACK_MODELS;
+}
+
+async function callGeminiApi({ apiKey, targetModel, requestBody, signal, label }) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${targetModel}:generateContent?key=${apiKey}`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(requestBody),
+    signal
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    const msg = err?.error?.message || `Gemini API returned status ${res.status}`;
+    const error = new Error(`Google Gemini Error on ${label}: ${msg}`);
+    error.status = res.status;
+    error.rawMessage = msg;
+    throw error;
+  }
+
+  return await res.json();
 }
 
 export async function transcribeAudioBuffer({ audioBuffer, apiKey, model, language = 'si', onProgress = () => {}, signal }) {
@@ -45,6 +72,8 @@ export async function transcribeAudioBuffer({ audioBuffer, apiKey, model, langua
   const chunkSize = 60; // 60-second chunks for fast processing and optimal Gemini timing
   const totalChunks = Math.ceil(totalDuration / chunkSize);
   const allCaptions = [];
+
+  let activeModel = model || getStoredModel() || DEFAULT_MODEL;
 
   for (let c = 0; c < totalChunks; c++) {
     if (signal?.aborted) throw new Error('Transcription cancelled.');
@@ -57,7 +86,7 @@ export async function transcribeAudioBuffer({ audioBuffer, apiKey, model, langua
     const wavBuffer = encode16kMonoWav(audioBuffer, offset, dur);
     const base64Audio = bufferToBase64(wavBuffer);
 
-    onProgress(`Gemini is transcribing ${label}...`, percent + 5);
+    onProgress(`Gemini (${activeModel}) is transcribing ${label}...`, percent + 5);
 
     const langInstruction =
       language === 'si'
@@ -106,23 +135,33 @@ export async function transcribeAudioBuffer({ audioBuffer, apiKey, model, langua
       }
     };
 
-    const targetModel = model || getStoredModel() || DEFAULT_MODEL;
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${targetModel}:generateContent?key=${apiKey}`;
+    let data;
+    try {
+      data = await callGeminiApi({ apiKey, targetModel: activeModel, requestBody, signal, label });
+    } catch (err) {
+      // Auto fallback if model is deprecated, not found, or not supported
+      const isModelError = err.status === 404 ||
+        err.rawMessage?.includes('no longer available') ||
+        err.rawMessage?.includes('not found') ||
+        err.rawMessage?.includes('not supported') ||
+        err.rawMessage?.includes('models/');
 
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(requestBody),
-      signal
-    });
-
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      const msg = err?.error?.message || `Gemini API returned status ${res.status}`;
-      throw new Error(`Google Gemini Error on ${label}: ${msg}`);
+      if (isModelError) {
+        const nextFallback = FALLBACK_MODELS.find(m => m !== activeModel);
+        if (nextFallback) {
+          console.warn(`Model ${activeModel} failed. Automatically falling back to ${nextFallback}...`);
+          onProgress(`Retrying with ${nextFallback}...`, percent + 10);
+          activeModel = nextFallback;
+          saveStoredModel(activeModel);
+          data = await callGeminiApi({ apiKey, targetModel: activeModel, requestBody, signal, label });
+        } else {
+          throw err;
+        }
+      } else {
+        throw err;
+      }
     }
 
-    const data = await res.json();
     const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
     if (rawText) {
       try {

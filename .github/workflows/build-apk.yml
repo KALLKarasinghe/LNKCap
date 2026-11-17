@@ -63,9 +63,9 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
         with:
-          tag_name: v1.0.0
-          name: "LNKcap Mobile v1.0.0 (Android APK)"
-          body: "Official Android APK release for LNKcap Mobile - Sinhala AI Caption Studio."
+          tag_name: v1.0.1
+          name: "LNKcap Mobile v1.0.1 (Android APK)"
+          body: "Updated with Gemini 3.8 Flash & auto model fallback for Sinhala AI audio captions."
           files: LNKcap-Mobile.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
